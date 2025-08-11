@@ -6,11 +6,11 @@ let leftBellyMesh = null;
 let rightBellyMesh = null;
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
-let draggable = null; // currently dragged object
+let draggable = null; // currently dragged mesh
 let dragPlane = new THREE.Plane();
 let dragOffset = new THREE.Vector3();
 let isDragging = false;
-let organMeshes = []; // store all draggable organ meshes
+let originalZ = null; // store original Z on drag start
 
 init();
 loadGLB();
@@ -25,8 +25,8 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    
-    // Add CSS styles directly to the canvas element
+
+    // Disable user selection and dragging on canvas
     renderer.domElement.style.userSelect = 'none';
     renderer.domElement.style.webkitUserSelect = 'none';
     renderer.domElement.style.webkitTouchCallout = 'none';
@@ -34,6 +34,7 @@ function init() {
 
     document.body.appendChild(renderer.domElement);
 
+    // Lights
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
@@ -42,6 +43,7 @@ function init() {
     dirLight.position.set(5, 10, 7);
     scene.add(dirLight);
 
+    // Event listeners
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
@@ -79,7 +81,6 @@ function loadGLB() {
 
                     if (!(child.name.includes("belly"))) {
                         child.userData.draggable = true;
-                        organMeshes.push(child); // save draggable organ
                     }
                 }
             });
@@ -94,9 +95,8 @@ function loadGLB() {
 }
 
 function onMouseDown(event) {
-    if (event.button !== 0) return;  // Only proceed for left click
-
-    event.preventDefault();  // Prevent default to avoid browser drag UI
+    if (event.button !== 0) return; // Left-click only
+    event.preventDefault();
 
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -108,7 +108,6 @@ function onMouseDown(event) {
         const clickedObject = intersects[0].object;
         console.log(`🖱 Clicked object: ${clickedObject.name}`);
 
-        // Hide belly parts (no drag)
         if (clickedObject === leftBellyMesh || clickedObject === rightBellyMesh) {
             if (clickedObject.visible) {
                 clickedObject.visible = false;
@@ -118,19 +117,18 @@ function onMouseDown(event) {
             return;
         }
 
-        // Start dragging organs (exclude "Plane" if needed)
         if (clickedObject.userData.draggable && clickedObject.name !== 'Plane') {
             draggable = clickedObject;
-            isDragging = true;  // <<<<< IMPORTANT: set dragging state here!
+            isDragging = true;
+
+            // Removed Z lifting, so no change here
 
             dragPlane.setFromNormalAndCoplanarPoint(
-                camera.getWorldDirection(new THREE.Vector3()).negate(),
-                draggable.position
+                camera.getWorldDirection(new THREE.Vector3()).clone().negate(),
+                intersects[0].point
             );
 
-            const intersectPoint = new THREE.Vector3();
-            raycaster.ray.intersectPlane(dragPlane, intersectPoint);
-            dragOffset.copy(intersectPoint).sub(draggable.position);
+            dragOffset.copy(intersects[0].point).sub(draggable.position);
 
             console.log(`🫀 Started dragging: ${clickedObject.name}`);
         }
@@ -139,8 +137,7 @@ function onMouseDown(event) {
 
 function onMouseMove(event) {
     if (!isDragging || !draggable) return;
-
-    event.preventDefault();  // Prevent default to avoid unwanted text selection / drag UI
+    event.preventDefault();
 
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -149,15 +146,14 @@ function onMouseMove(event) {
 
     const intersectPoint = new THREE.Vector3();
     if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
-        const newPos = intersectPoint.sub(dragOffset);
-        draggable.position.copy(newPos);
-        // Optional debug log: uncomment below if needed
-        // console.log(`⬆️ Moving ${draggable.name} to`, newPos);
+        // Move the mesh exactly to cursor, offset by dragOffset so no jump
+        draggable.position.copy(intersectPoint.sub(dragOffset));
     }
 }
 
 function onMouseUp() {
     if (isDragging && draggable) {
+        // Removed Z restore as well
         console.log(`🛑 Dropped: ${draggable.name}`);
         draggable = null;
     }
