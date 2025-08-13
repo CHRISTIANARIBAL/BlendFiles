@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>GLB Loader</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Organ Drop Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  </style>
 </head>
-<body>
-    <script type="module" src="/src/index.js"></script>
+<body class="h-screen flex">
+
+  <!-- Left: Three.js scene container -->
+  <div id="three-container" class="flex-[7] bg-white"></div>
+
+  <!-- Right: UI / Tray Panel -->
+  <div class="flex-[3] bg-gray-100 p-4 flex flex-col items-center">
+    <img src="tray.PNG" alt="Organ Tray" class="max-w-full mb-4">
+    <div class="text-lg font-bold">Organ Tray</div>
+    <p class="text-sm text-gray-600">Drop organs here.</p>
+  </div>
+
+  <script type="module" src="src/index.js"></script>
 </body>
 </html>
