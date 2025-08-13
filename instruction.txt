@@ -5,3 +5,14 @@ npm install three
 npm install --save-dev vite
 
 npx vite
+
+
+
+########### git ###########
+git branch
+git pull origin main
+
+
+
+############ accidentally add the node modules ###############
+git rm -r --cached node_modules
