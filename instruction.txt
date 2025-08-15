@@ -16,3 +16,13 @@ git pull origin main
 
 ############ accidentally add the node modules ###############
 git rm -r --cached node_modules
+
+
+Three.js Drag and Drop Tutorial
+https://youtu.be/gEZcJ3GufmE
+
+three.js Raycaster - Tutorial for mouse picking / drag & drop
+https://youtu.be/a0qSHBnqORU
+
+8b How to use DragControls in three.js
+https://youtu.be/YyK6o8MhUf4
